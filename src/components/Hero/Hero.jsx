@@ -19,6 +19,7 @@ function HowItWorksList() {
 
   return (
     <ol className="grid gap-4">
+      <h2 className="text-center font-medium text-lg mb-4">How it works</h2>
       <Item text="Download the app and create your team." />
       <Item text="Download the app and create your team." />
       <Item text="Download the app and create your team." />
@@ -31,7 +32,7 @@ export default function Hero() {
   const [howOpen, setHowOpen] = useState(false);
 
   return (
-    <section className="w-full min-h-[88vh] px-6 flex flex-col items-center text-center py-10 space-y-6">
+    <section className="w-full h-screen px-6 flex flex-col items-center text-center py-10 space-y-6">
       <header className="flex flex-col items-center mb-16">
         <div className="flex items-center justify-center">
           <Image src="/logo.svg" width={96} height={96} alt="Logotyp" />
@@ -44,7 +45,7 @@ export default function Hero() {
       </header>
 
       <div className="flex flex-col gap-4 w-full max-w-sm mb-10">
-        <Button href="/start" variant="primary" size="lg" Icon={PlayArrowIcon}>
+        <Button href="/config" variant="primary" size="lg" Icon={PlayArrowIcon}>
           Start
         </Button>
 
