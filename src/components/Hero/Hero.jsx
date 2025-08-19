@@ -27,7 +27,7 @@ export default function Hero() {
           Starta äventyret
         </Button>
 
-        <Button href="/add" variant="outline" size="lg" Icon={HelpIcon}>
+        <Button href="/" variant="outline" size="lg" Icon={HelpIcon}>
           Så funkar det
         </Button>
       </div>
