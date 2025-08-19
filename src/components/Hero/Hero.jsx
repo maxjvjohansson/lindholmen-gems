@@ -6,7 +6,7 @@ import Image from "next/image";
 
 export default function Hero() {
   return (
-    <section className="w-full h-screen px-6 bg-gradient-to-r from-blue-50 to-indigo-100 flex flex-col items-center text-center py-10 space-y-6">
+    <section className="w-full h-screen px-6 bg-mint flex flex-col items-center text-center py-10 space-y-6">
       <header className="flex flex-col items-center mb-24">
         <div className="flex items-center justify-center">
           <Image src="/logo.svg" width={96} height={96} alt="Logotype image" />
