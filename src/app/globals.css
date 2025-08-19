@@ -14,6 +14,14 @@
 @theme {
   --color-white: #ffffff;
   --color-black: #000000;
+  --color-gray: #e5e7eb;
+  --color-mint: #edfdf6;
+  --color-green: #10b981;
+  --color-teal: #14b8a6;
+  --color-blue: #06b6d4;
+  --color-dark-blue: #1f2937;
+  --color-purple: #a855f7;
+  --color-green-gradient: linear-gradient(90deg, #10b981 0%, #e5e7eb 100%);
 }
 
 body {
