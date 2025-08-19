@@ -9,7 +9,7 @@ export default function Hero() {
     <section className="w-full h-screen px-6 bg-gradient-to-r from-blue-50 to-indigo-100 flex flex-col items-center text-center py-10 space-y-6">
       <header className="flex flex-col items-center mb-24">
         <div className="flex items-center justify-center">
-          <Image src="/logo.svg" width={96} height={96} />
+          <Image src="/logo.svg" width={96} height={96} alt="Logotype image" />
         </div>
         <h1 className="text-3xl font-normal">Lindholmen Gems</h1>
         <p className="text-gray-600 mt-2">
