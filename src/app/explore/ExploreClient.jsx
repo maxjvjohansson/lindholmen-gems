@@ -1,7 +1,7 @@
 "use client";
-
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Button from "@/components/Button/Button";
 import Modal from "@/components/Modal/Modal";
 import { isWithinRadius } from "@/lib/geo";
@@ -11,7 +11,10 @@ const Map = dynamic(() => import("@/components/Map/Map"), {
   loading: () => <div className="w-full h-full bg-gray-100 rounded-md" />,
 });
 
-export default function ExploreClient({ currentStep }) {
+export default function ExploreClient() {
+  const searchParams = useSearchParams();
+  const currentStep = Number(searchParams.get("step")) || 1;
+
   const totalSteps = 4;
   const nextStep = Math.min(totalSteps, currentStep + 1);
   const nextHref = `/explore?step=${nextStep}`;
@@ -31,10 +34,8 @@ export default function ExploreClient({ currentStep }) {
   );
 
   const target = targets[currentStep - 1] || targets[0];
-
   const [userPos, setUserPos] = useState(null);
   const [taskOpen, setTaskOpen] = useState(false);
-
   const [completedSteps, setCompletedSteps] = useState(() => {
     if (typeof window === "undefined") return [];
     const stored = localStorage.getItem("completedSteps");
@@ -85,7 +86,6 @@ export default function ExploreClient({ currentStep }) {
           markerPopup={target.name}
         />
       </div>
-
       <div className="fixed bottom-4 left-0 right-0 z-[1100] flex justify-center pointer-events-none">
         <div className="pointer-events-auto">
           <Button
@@ -98,7 +98,6 @@ export default function ExploreClient({ currentStep }) {
           </Button>
         </div>
       </div>
-
       <Modal open={taskOpen} onClose={() => setTaskOpen(false)}>
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Task at {target.name}</h2>
