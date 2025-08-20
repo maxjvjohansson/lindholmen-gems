@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Button from "../Button/Button";
 import Modal from "../Modal/Modal";
+import JoinLobby from "../JoinLobby/JoinLobby";
 
 function HowItWorksList() {
   const Item = ({ text }) => (
@@ -44,8 +45,10 @@ export default function Hero() {
 
       <div className="flex flex-col gap-4 w-full max-w-sm mb-10">
         <Button href="/config" variant="primary" size="lg">
-          Start
+          Start a new walk
         </Button>
+
+        <JoinLobby />
 
         <Button onClick={() => setHowOpen(true)} variant="primary" size="lg">
           How it works

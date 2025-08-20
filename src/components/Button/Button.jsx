@@ -13,7 +13,7 @@ export default function Button({
   ...props
 }) {
   const base =
-    "inline-flex items-center justify-center rounded-xl font-normal transition focus:outline-none focus:ring-2 focus:ring-offset-2";
+    "inline-flex items-center justify-center rounded-xl font-normal transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2";
 
   const variants = {
     primary:
