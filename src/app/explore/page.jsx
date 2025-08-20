@@ -1,7 +1,13 @@
+import { Suspense } from "react";
 import ExploreClient from "./ExploreClient";
 
-export default function ExplorePage({ searchParams }) {
-  const step = Number(searchParams?.step) || 1;
-
-  return <ExploreClient currentStep={step} />;
+// Simpler approach: let the client handle search params
+export default function ExplorePage() {
+  return (
+    <Suspense
+      fallback={<div className="w-full h-screen bg-gray-100 animate-pulse" />}
+    >
+      <ExploreClient />
+    </Suspense>
+  );
 }
