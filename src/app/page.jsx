@@ -1,3 +1,4 @@
+import CTA from "@/components/CTA/CTA";
 import Hero from "@/components/Hero/Hero";
 import InfoText from "@/components/InfoText/InfoText";
 import Instructions from "@/components/Instructions/Instructions";
@@ -11,6 +12,7 @@ export default function HomePage() {
       <Hero />
       <InfoText />
       <Instructions />
+      <CTA />
     </section>
   );
 }
