@@ -1,13 +1,123 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createSession, joinByCode } from "@/lib/sessionApi";
+import { getOrCreateDeviceId } from "@/lib/deviceId";
 import Button from "@/components/Button/Button";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+
+import MinusIcon from "@/assets/icons/minus.svg";
+import PlusIcon from "@/assets/icons/plus.svg";
+
+function Row({ label, sub, value, onInc, onDec }) {
+  return (
+    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-4 py-4">
+      <button
+        type="button"
+        aria-label={`Decrease ${label}`}
+        onClick={onDec}
+        className="p-0 m-0 bg-transparent border-none"
+      >
+        <MinusIcon
+          className="w-11 h-11 block pointer-events-none"
+          aria-hidden="true"
+        />
+      </button>
+
+      <div className="text-center">
+        <div className="text-2xl">{value}</div>
+        <div className="text-sm text-slate-500">{sub}</div>
+      </div>
+
+      <button
+        type="button"
+        aria-label={`Increase ${label}`}
+        onClick={onInc}
+        className="p-0 m-0 bg-transparent border-none"
+      >
+        <PlusIcon
+          className="w-11 h-11 block pointer-events-none"
+          aria-hidden="true"
+        />
+      </button>
+    </div>
+  );
+}
 
 export default function ConfigPage() {
+  const router = useRouter();
+
+  const [duration, setDuration] = useState(30);
+  const [players, setPlayers] = useState(5);
+  const [stops, setStops] = useState(4);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+
+  const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
+
+  async function handleGenerate() {
+    setLoading(true);
+    setErr("");
+    try {
+      const session = await createSession({
+        routeId: "lunch_30",
+        durationMin: duration,
+        players,
+        stops,
+      });
+      await joinByCode(session.code, getOrCreateDeviceId(), "Leader");
+      router.push(`/start?session=${session.id}&code=${session.code}`);
+    } catch (e) {
+      console.error(e);
+      setErr("Could not create session. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <section>
-      <div className="flex flex-col gap-4 w-full max-w-sm mb-10">
-        <Button href="/start" variant="primary" size="lg" Icon={PlayArrowIcon}>
-          Next
-        </Button>
+    <section className="min-h-[88vh] h-screen flex items-center bg-gradient-to-b from-[#FAF3EB]/50 to-[#FFE3CA]">
+      <div className="mx-auto w-full max-w-sm p-6">
+        <form className="grid gap-6">
+          <Row
+            label="Duration"
+            sub="Perfect Duration"
+            value={`${duration} min`}
+            onInc={() => setDuration((v) => clamp(v + 5, 15, 60))}
+            onDec={() => setDuration((v) => clamp(v - 5, 15, 60))}
+          />
+          <Row
+            label="Players"
+            sub="Players"
+            value={players}
+            onInc={() => setPlayers((v) => clamp(v + 1, 2, 8))}
+            onDec={() => setPlayers((v) => clamp(v - 1, 2, 8))}
+          />
+          <Row
+            label="Stops"
+            sub="Stops"
+            value={stops}
+            onInc={() => setStops((v) => clamp(v + 1, 3, 6))}
+            onDec={() => setStops((v) => clamp(v - 1, 3, 6))}
+          />
+
+          {err && <p className="text-sm text-red-600">{err}</p>}
+
+          <Button
+            type="button"
+            onClick={handleGenerate}
+            disabled={loading}
+            variant="primary"
+            size="lg"
+            className="mt-2 w-full rounded-xl py-3 font-semibold"
+          >
+            {loading ? "Generating…" : "Generate Walk"}
+          </Button>
+
+          <p className="text-center text-xs text-slate-500">
+            A 4-digit team code will be generated and shared with your group.
+          </p>
+        </form>
       </div>
     </section>
   );
