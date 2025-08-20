@@ -1,5 +1,8 @@
-import ExploreClient from "./ExploreClient";
 import { Suspense } from "react";
+import ExploreClient from "./ExploreClient";
+
+// Force dynamic rendering to avoid prerendering issues with useSearchParams
+export const dynamic = "force-dynamic";
 
 export default function ExplorePage() {
   return (
