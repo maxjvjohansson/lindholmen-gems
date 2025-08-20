@@ -74,7 +74,7 @@ export default function ExploreClient() {
       (err) => console.error("Geolocation watch error:", err),
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
     );
-
+    
     return () => watchId && navigator.geolocation.clearWatch(watchId);
   }, []);
 
