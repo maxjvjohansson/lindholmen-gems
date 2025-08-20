@@ -31,7 +31,10 @@ export default function Hero() {
   const [howOpen, setHowOpen] = useState(false);
 
   return (
-    <section className="w-full h-screen px-6 flex flex-col items-center text-center py-10 space-y-6">
+    <section
+      className="w-full h-screen px-6 flex flex-col items-center text-center py-10 space-y-6 
+  bg-gradient-to-b from-[#FAF3EB] from-50% to-[#FFE3CA] to-100%"
+    >
       <header className="flex flex-col items-center mb-16">
         <div className="flex items-center justify-center">
           <Image src="/logo.svg" width={96} height={96} alt="Logotyp" />

@@ -80,7 +80,7 @@ export default function JoinLobby() {
               className={`flex-1 rounded-xl py-2.5 font-semibold cursor-pointer ${
                 loading || code.length < 4
                   ? "bg-slate-200 text-slate-500"
-                  : "bg-emerald-600 text-white hover:bg-emerald-700"
+                  : "text-white bg-gradient-to-r from-[#449467] to-[#357450] hover:opacity-90 transition"
               }`}
               aria-disabled={loading || code.length < 4}
             >
