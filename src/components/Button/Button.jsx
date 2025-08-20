@@ -18,8 +18,7 @@ export default function Button({
   const variants = {
     primary:
       "text-white bg-gradient-to-r from-[#FFA656] to-[#CF711C] hover:opacity-90 transition",
-    outline:
-      "border-2 border-gray bg-white text-dark-blue hover:bg-gray-50 focus:ring-gray-300",
+    outline: "text-[#CF711C] border-2 border-[#CF711C]",
   };
 
   const sizes = {
