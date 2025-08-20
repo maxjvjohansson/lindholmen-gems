@@ -57,21 +57,20 @@ export default function ExploreClient() {
     window.location.href = nextHref;
   };
 
-  // Request location immediately and then watch continuously
   useEffect(() => {
     if (!navigator.geolocation) return;
 
-    // Ask for permission immediately
+    // Prompt user immediately for permission
     navigator.geolocation.getCurrentPosition(
       (pos) => setUserPos([pos.coords.latitude, pos.coords.longitude]),
       (err) => console.error("Geolocation error:", err),
       { enableHighAccuracy: true }
     );
 
-    // Watch position continuously
+    // Then keep watching position
     const watchId = navigator.geolocation.watchPosition(
       (pos) => setUserPos([pos.coords.latitude, pos.coords.longitude]),
-      (err) => console.error("Geolocation watch error:", err),
+      (err) => console.error(err),
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
     );
     
