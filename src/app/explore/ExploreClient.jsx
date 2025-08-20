@@ -7,7 +7,6 @@ import Button from "@/components/Button/Button";
 import Modal from "@/components/Modal/Modal";
 import { isWithinRadius } from "@/lib/geo";
 
-// Dynamically import Map to avoid SSR issues
 const Map = dynamic(() => import("@/components/Map/Map"), {
   ssr: false,
   loading: () => <div className="w-full h-full bg-gray-100 rounded-md" />,
@@ -37,10 +36,10 @@ export default function ExploreClient() {
   const target = targets[currentStep - 1] || targets[0];
 
   const [userPos, setUserPos] = useState(null);
+  const [locationModalOpen, setLocationModalOpen] = useState(true); // Modal öppnas först
   const [taskOpen, setTaskOpen] = useState(false);
   const [completedSteps, setCompletedSteps] = useState([]);
 
-  // Load completedSteps from localStorage safely
   useEffect(() => {
     const stored = localStorage.getItem("completedSteps");
     if (stored) setCompletedSteps(JSON.parse(stored));
@@ -57,25 +56,31 @@ export default function ExploreClient() {
     window.location.href = nextHref;
   };
 
-  useEffect(() => {
-    if (!navigator.geolocation) return;
+  // Funktion för att be om plats
+  const askLocation = () => {
+    if (!navigator.geolocation)
+      return alert("Din webbläsare stöder inte plats.");
 
-    // Prompt user immediately for permission
     navigator.geolocation.getCurrentPosition(
-      (pos) => setUserPos([pos.coords.latitude, pos.coords.longitude]),
-      (err) => console.error("Geolocation error:", err),
+      (pos) => {
+        setUserPos([pos.coords.latitude, pos.coords.longitude]);
+        setLocationModalOpen(false); // Stäng modalen när platsen är given
+      },
+      (err) => {
+        console.error("Geolocation error:", err);
+      },
       { enableHighAccuracy: true }
     );
 
-    // Then keep watching position
+    // Börja även följa positionen kontinuerligt
     const watchId = navigator.geolocation.watchPosition(
       (pos) => setUserPos([pos.coords.latitude, pos.coords.longitude]),
       (err) => console.error(err),
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
     );
-    
+
     return () => watchId && navigator.geolocation.clearWatch(watchId);
-  }, []);
+  };
 
   const within = userPos
     ? isWithinRadius(userPos, target.center, target.radius)
@@ -112,6 +117,31 @@ export default function ExploreClient() {
         </div>
       </div>
 
+      {/* Modal för att be om plats */}
+      <Modal
+        open={locationModalOpen}
+        onClose={() => setLocationModalOpen(false)}
+      >
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold">Vi behöver din plats</h2>
+          <p className="text-sm text-gray-700">
+            För att låsa upp spelet behöver vi veta din position.
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setLocationModalOpen(false)}
+            >
+              Stäng
+            </Button>
+            <Button variant="primary" onClick={askLocation}>
+              Tillåt plats
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Task modal */}
       <Modal open={taskOpen} onClose={() => setTaskOpen(false)}>
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Task at {target.name}</h2>
