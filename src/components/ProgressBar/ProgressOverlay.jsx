@@ -1,23 +1,36 @@
 "use client";
 import { useEffect, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import ProgressBar from "@/components/ProgressBar/ProgressBar";
+import { useParticipants } from "@/lib/useParticipants";
 
 export default function ProgressOverlay({
   total = 4,
   storageKey = "progressStep",
 }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
+
+  const sessionId = searchParams.get("session");
+  if (!sessionId) {
+    router.replace("/");
+    return null;
+  }
+
+  const { count, participants } = useParticipants(sessionId);
+
   const stepFromUrl = Number(searchParams.get("step"));
   const stored =
     typeof window !== "undefined"
       ? Number(localStorage.getItem(storageKey))
       : NaN;
+
   const step = useMemo(() => stepFromUrl || stored || 1, [stepFromUrl, stored]);
 
   useEffect(() => {
-    if (!isNaN(stepFromUrl))
+    if (!isNaN(stepFromUrl)) {
       localStorage.setItem(storageKey, String(stepFromUrl));
+    }
   }, [stepFromUrl]);
 
   const percent = Math.min(100, Math.max(0, (step / total) * 100));
@@ -26,6 +39,11 @@ export default function ProgressOverlay({
     <div className="fixed top-0 left-0 right-0 z-10 p-4 pointer-events-none">
       <div className="max-w-2xl mx-auto pointer-events-auto">
         <ProgressBar value={percent} label={`${step}/${total}`} />
+      </div>
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+        <span className="rounded-full bg-white/90 border px-3 py-1 text-sm shadow">
+          {count} People
+        </span>
       </div>
     </div>
   );
