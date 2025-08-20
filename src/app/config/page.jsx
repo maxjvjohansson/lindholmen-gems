@@ -8,6 +8,7 @@ import Button from "@/components/Button/Button";
 
 import MinusIcon from "@/assets/icons/minus.svg";
 import PlusIcon from "@/assets/icons/plus.svg";
+import Header from "@/components/Header/Header";
 
 function Row({ label, sub, value, onInc, onDec }) {
   return (
@@ -76,8 +77,9 @@ export default function ConfigPage() {
   }
 
   return (
-    <section className="min-h-[88vh] h-screen flex items-center bg-gradient-to-b from-[#FAF3EB]/50 to-[#FFE3CA]">
-      <div className="mx-auto w-full max-w-sm p-6">
+    <section className="min-h-[88vh] h-screen flex flex-col items-center bg-gradient-to-b from-[#FAF3EB]/50 to-[#FFE3CA]">
+      <Header />
+      <div className="mx-auto w-full max-w-sm px-12">
         <form className="grid gap-6">
           <Row
             label="Duration"
