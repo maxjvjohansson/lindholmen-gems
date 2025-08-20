@@ -7,7 +7,10 @@ import NumberFour from "@/assets/icons/4.svg";
 
 export default function Instructions() {
   return (
-    <article className="flex justify-center items-center mt-18">
+    <article
+      id="instructions"
+      className="flex justify-center items-center mt-18"
+    >
       <div className="w-72 inline-flex flex-col justify-start items-center gap-5">
         <div className="inline-flex justify-center items-center">
           <h2 className="text-center justify-start text-Dark-blue text-2xl font-normal font-['Quicksand'] leading-loose">
