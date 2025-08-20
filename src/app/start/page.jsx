@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Button from "@/components/Button/Button";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
@@ -37,7 +36,7 @@ export default function StartPage() {
   }
 
   return (
-    <section className="min-h-[88vh] flex items-start">
+    <section className="min-h-[88vh] h-screen flex items-start bg-gradient-to-b from-[#FAF3EB]/50 to-[#FFE3CA]">
       <div className="mx-auto w-full max-w-sm p-6 grid gap-5">
         <div className="flex items-center justify-between">
           <button
@@ -68,7 +67,7 @@ export default function StartPage() {
         </div>
 
         <div className="relative rounded-xl overflow-hidden border border-slate-200">
-          <div className="aspect-[4/3] bg-[url('/map-preview.jpg')] bg-cover bg-center" />
+          <div className="aspect-[4/3] bg-[url('/map_preview.png')] bg-cover bg-center" />
           <div className="absolute inset-y-0 left-1 grid place-items-center">
             <span className="rounded-full bg-white/90 border border-slate-200 px-2 py-1">
               ‹
@@ -94,13 +93,11 @@ export default function StartPage() {
           </button>
         </div>
 
-        {/* Start */}
         <div className="mt-2">
           <Button
             href={`/quest?session=${sessionId}`}
             variant="primary"
             size="lg"
-            Icon={PlayArrowIcon}
             className="w-full"
           >
             Start
