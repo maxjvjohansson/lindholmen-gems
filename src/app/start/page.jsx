@@ -1,12 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Button from "@/components/Button/Button";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 export default function StartPage() {
+  return (
+    <Suspense fallback={<div>Loading…</div>}>
+      <StartPageContent />
+    </Suspense>
+  );
+}
+
+function StartPageContent() {
   const sp = useSearchParams();
   const router = useRouter();
 
