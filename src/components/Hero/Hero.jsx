@@ -3,8 +3,6 @@
 import { useState } from "react";
 import Image from "next/image";
 import Button from "../Button/Button";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import HelpIcon from "@mui/icons-material/Help";
 import Modal from "../Modal/Modal";
 
 function HowItWorksList() {
@@ -45,16 +43,11 @@ export default function Hero() {
       </header>
 
       <div className="flex flex-col gap-4 w-full max-w-sm mb-10">
-        <Button href="/config" variant="primary" size="lg" Icon={PlayArrowIcon}>
+        <Button href="/config" variant="primary" size="lg">
           Start
         </Button>
 
-        <Button
-          onClick={() => setHowOpen(true)}
-          variant="outline"
-          size="lg"
-          Icon={HelpIcon}
-        >
+        <Button onClick={() => setHowOpen(true)} variant="primary" size="lg">
           How it works
         </Button>
       </div>
