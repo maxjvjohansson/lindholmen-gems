@@ -4,7 +4,7 @@ import { Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Button from "@/components/Button/Button";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import BackIcon from "@/assets/icons/back_icon.svg";
 
 export default function StartPage() {
   return (
@@ -50,9 +50,9 @@ function StartPageContent() {
           <button
             onClick={() => router.back()}
             aria-label="Back"
-            className="grid h-9 w-9 place-items-center rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+            className="grid h-9 w-9 place-items-center rounded-full border-0 text-slate-700 hover:bg-slate-50"
           >
-            <ArrowBackIcon fontSize="small" />
+            <BackIcon />
           </button>
 
           <div className="flex items-center gap-2">
@@ -66,7 +66,9 @@ function StartPageContent() {
             </button>
           </div>
         </div>
-
+        <div className="text-center justify-start text-gray-800 text-2xl font-normal font-['Quicksand'] leading-loose">
+          You have chosen
+        </div>
         <div className="grid grid-cols-2 gap-6 text-center">
           <Stat top={teamWalk} label="Team walk" />
           <Stat top={`${durationMin} min`} label="Perfect Duration" />
@@ -74,19 +76,7 @@ function StartPageContent() {
           <Stat top={`${distanceKm}km`} label="Perfect Duration" />
         </div>
 
-        <div className="relative rounded-xl overflow-hidden border border-slate-200">
-          <div className="aspect-[4/3] bg-[url('/map_preview.png')] bg-cover bg-center" />
-          <div className="absolute inset-y-0 left-1 grid place-items-center">
-            <span className="rounded-full bg-white/90 border border-slate-200 px-2 py-1">
-              ‹
-            </span>
-          </div>
-          <div className="absolute inset-y-0 right-1 grid place-items-center">
-            <span className="rounded-full bg-white/90 border border-slate-200 px-2 py-1">
-              ›
-            </span>
-          </div>
-        </div>
+        <div className="aspect-square bg-[url('/map_preview.png')] bg-cover bg-center" />
 
         <div className="flex items-center justify-center gap-2 text-slate-700">
           <button
