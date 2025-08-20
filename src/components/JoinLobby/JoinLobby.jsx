@@ -20,7 +20,7 @@ export default function JoinLobby() {
     setErr("");
     try {
       const sess = await joinByCode(code, getOrCreateDeviceId());
-      router.push(`/quest?session=${sess.id}`);
+      router.push(`/explore?session=${sess.id}`);
     } catch {
       setErr("No active session found with that code.");
     } finally {
