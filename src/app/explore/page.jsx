@@ -14,6 +14,7 @@ const Map = dynamic(() => import("@/components/Map/Map"), {
 });
 
 export default function ExplorePage() {
+  // --- Client-only hooks ---
   const searchParams = useSearchParams();
   const currentStep = Number(searchParams.get("step")) || 1;
   const totalSteps = 4;
@@ -33,6 +34,7 @@ export default function ExplorePage() {
     ],
     []
   );
+
   const target = targets[currentStep - 1] || targets[0];
 
   const [userPos, setUserPos] = useState(null);
@@ -47,31 +49,32 @@ export default function ExplorePage() {
 
   const taskDone = completedSteps.includes(currentStep);
 
+  const within = userPos
+    ? isWithinRadius(userPos, target.center, target.radius)
+    : false;
+
   const markStepDone = () => {
     if (!within || taskDone) return;
     const newCompleted = [...completedSteps, currentStep];
     setCompletedSteps(newCompleted);
     localStorage.setItem("completedSteps", JSON.stringify(newCompleted));
     setTaskOpen(false);
+    // Automatically go to next step
     window.location.href = nextHref;
   };
 
   // --- Geolocation ---
   useEffect(() => {
-    let watchId;
-    if (navigator.geolocation) {
-      watchId = navigator.geolocation.watchPosition(
-        (pos) => setUserPos([pos.coords.latitude, pos.coords.longitude]),
-        () => {},
-        { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
-      );
-    }
-    return () => watchId && navigator.geolocation.clearWatch(watchId);
-  }, []);
+    if (!navigator.geolocation) return;
 
-  const within = userPos
-    ? isWithinRadius(userPos, target.center, target.radius)
-    : false;
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => setUserPos([pos.coords.latitude, pos.coords.longitude]),
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, []);
 
   return (
     <section className="w-full p-0">
@@ -107,10 +110,12 @@ export default function ExplorePage() {
       <Modal open={taskOpen} onClose={() => setTaskOpen(false)}>
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Task at {target.name}</h2>
-          <p className="text-sm text-gray-700">Task here!</p>
+          <p className="text-sm text-gray-700">
+            Complete this task to unlock the next location.
+          </p>
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => setTaskOpen(false)}>
-              Stäng
+              Close
             </Button>
             <Button onClick={markStepDone} disabled={!within || taskDone}>
               Mark as done
