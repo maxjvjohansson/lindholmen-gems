@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState, Suspense } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Button from "@/components/Button/Button";
 import Modal from "@/components/Modal/Modal";
@@ -80,20 +80,16 @@ export default function ExploreClient() {
         className="relative w-full p-0 mt-[72px]"
         style={{ height: "calc(100vh - 72px)" }}
       >
-        <Suspense
-          fallback={<div className="w-full h-full bg-gray-100 rounded-md" />}
-        >
-          <Map
-            className="w-full h-full"
-            zoom={16}
-            minZoom={16}
-            restrictPanning
-            restrictToInitialView
-            markerPosition={target.center}
-            circleRadiusMeters={target.radius}
-            markerPopup={target.name}
-          />
-        </Suspense>
+        <Map
+          className="w-full h-full"
+          zoom={16}
+          minZoom={16}
+          restrictPanning
+          restrictToInitialView
+          markerPosition={target.center}
+          circleRadiusMeters={target.radius}
+          markerPopup={target.name}
+        />
       </div>
 
       <div className="fixed bottom-4 left-0 right-0 z-[1100] flex justify-center pointer-events-none">
