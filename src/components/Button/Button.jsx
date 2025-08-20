@@ -9,6 +9,7 @@ export default function Button({
   size = "md",
   Icon,
   className,
+  disabled,
   ...props
 }) {
   const base =
@@ -27,7 +28,13 @@ export default function Button({
     lg: "px-6 py-3 text-2xl gap-2",
   };
 
-  const classes = clsx(base, variants[variant], sizes[size], className);
+  const classes = clsx(
+    base,
+    variants[variant],
+    sizes[size],
+    disabled && "opacity-60 cursor-not-allowed",
+    className
+  );
 
   const content = (
     <>
@@ -38,14 +45,25 @@ export default function Button({
 
   if (href) {
     return (
-      <Link href={href} className={classes} {...props}>
+      <Link
+        href={href}
+        className={classes}
+        aria-disabled={disabled}
+        onClick={disabled ? (e) => e.preventDefault() : undefined}
+        {...props}
+      >
         {content}
       </Link>
     );
   }
 
   return (
-    <button onClick={onClick} className={classes} {...props}>
+    <button
+      onClick={onClick}
+      className={classes}
+      disabled={disabled}
+      {...props}
+    >
       {content}
     </button>
   );

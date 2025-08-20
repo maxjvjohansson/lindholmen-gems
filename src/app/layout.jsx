@@ -1,4 +1,5 @@
 import { Quicksand } from "next/font/google";
+import ProgressOverlay from "@/components/ProgressBar/ProgressOverlay";
 import "./globals.css";
 
 const quicksand = Quicksand({
