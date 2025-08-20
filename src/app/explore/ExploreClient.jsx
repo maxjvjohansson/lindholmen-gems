@@ -1,10 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useEffect, useMemo, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Button from "@/components/Button/Button";
 import Modal from "@/components/Modal/Modal";
-import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { isWithinRadius } from "@/lib/geo";
 
 // Dynamically import Map to avoid SSR issues
@@ -38,11 +38,13 @@ export default function ExploreClient() {
 
   const [userPos, setUserPos] = useState(null);
   const [taskOpen, setTaskOpen] = useState(false);
-  const [completedSteps, setCompletedSteps] = useState(() => {
-    if (typeof window === "undefined") return [];
+  const [completedSteps, setCompletedSteps] = useState([]);
+
+  // Load completedSteps from localStorage safely
+  useEffect(() => {
     const stored = localStorage.getItem("completedSteps");
-    return stored ? JSON.parse(stored) : [];
-  });
+    if (stored) setCompletedSteps(JSON.parse(stored));
+  }, []);
 
   const taskDone = completedSteps.includes(currentStep);
 
@@ -55,6 +57,7 @@ export default function ExploreClient() {
     window.location.href = nextHref;
   };
 
+  // Watch user geolocation
   useEffect(() => {
     let watchId;
     if (navigator.geolocation) {
@@ -77,16 +80,20 @@ export default function ExploreClient() {
         className="relative w-full p-0 mt-[72px]"
         style={{ height: "calc(100vh - 72px)" }}
       >
-        <Map
-          className="w-full h-full"
-          zoom={16}
-          minZoom={16}
-          restrictPanning
-          restrictToInitialView
-          markerPosition={target.center}
-          circleRadiusMeters={target.radius}
-          markerPopup={target.name}
-        />
+        <Suspense
+          fallback={<div className="w-full h-full bg-gray-100 rounded-md" />}
+        >
+          <Map
+            className="w-full h-full"
+            zoom={16}
+            minZoom={16}
+            restrictPanning
+            restrictToInitialView
+            markerPosition={target.center}
+            circleRadiusMeters={target.radius}
+            markerPopup={target.name}
+          />
+        </Suspense>
       </div>
 
       <div className="fixed bottom-4 left-0 right-0 z-[1100] flex justify-center pointer-events-none">
