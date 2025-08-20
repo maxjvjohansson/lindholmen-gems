@@ -1,3 +1,5 @@
+"use client";
+
 import Button from "../Button/Button";
 
 export default function CTA() {
@@ -68,7 +70,14 @@ export default function CTA() {
             </div>
           </div>
         </div>
-        <Button className="w-full" variant="primary" size="lg">
+        <Button
+          className="w-full"
+          variant="primary"
+          size="lg"
+          onClick={() => {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+        >
           Get started
         </Button>
       </div>

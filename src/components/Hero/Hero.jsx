@@ -16,7 +16,15 @@ export default function Hero() {
 
         <JoinLobby />
 
-        <Button variant="outline" size="lg">
+        <Button
+          variant="outline"
+          size="lg"
+          onClick={() => {
+            document
+              .getElementById("instructions")
+              ?.scrollIntoView({ behavior: "smooth" });
+          }}
+        >
           How it works ?
         </Button>
       </div>
