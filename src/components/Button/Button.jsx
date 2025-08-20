@@ -16,7 +16,7 @@ export default function Button({
 
   const variants = {
     primary:
-      "text-white bg-gradient-to-r from-[#1F2937] to-[#4E2971] hover:opacity-90 transition",
+      "text-white bg-gradient-to-r from-[#FFA656] to-[#CF711C] hover:opacity-90 transition",
     outline:
       "border-2 border-gray bg-white text-dark-blue hover:bg-gray-50 focus:ring-gray-300",
   };
