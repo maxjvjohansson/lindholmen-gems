@@ -1,7 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import Button from "@/components/Button/Button";
 import Modal from "@/components/Modal/Modal";
 import { isWithinRadius } from "@/lib/geo";
@@ -11,10 +10,7 @@ const Map = dynamic(() => import("@/components/Map/Map"), {
   loading: () => <div className="w-full h-full bg-gray-100 rounded-md" />,
 });
 
-export default function ExploreClient() {
-  const searchParams = useSearchParams();
-  const currentStep = Number(searchParams.get("step")) || 1;
-
+export default function ExploreClient({ currentStep }) {
   const totalSteps = 4;
   const nextStep = Math.min(totalSteps, currentStep + 1);
   const nextHref = `/explore?step=${nextStep}`;
