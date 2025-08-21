@@ -7,8 +7,6 @@ import Button from "@/components/Button/Button";
 import { isWithinRadius } from "@/lib/geo";
 import { useSessionProgress } from "@/lib/useSessionProgress";
 
-const Modal = dynamic(() => import("@/components/Modal/Modal"), { ssr: false });
-
 const Map = dynamic(() => import("@/components/Map/Map"), {
   ssr: false,
   loading: () => <div className="w-full h-full bg-gray-100 rounded-md" />,
@@ -40,10 +38,11 @@ export default function ExploreClient() {
 
   const [userPos, setUserPos] = useState(null);
   const [locationModalOpen, setLocationModalOpen] = useState(false);
-  const [taskOpen, setTaskOpen] = useState(false);
+  const [contentState, setContentState] = useState("locked"); // "locked" or "unlocked"
   const watchIdRef = useRef(null);
   const watchRetryRef = useRef({ tries: 0, id: null });
   const [hydrated, setHydrated] = useState(false);
+  const [locationInitialized, setLocationInitialized] = useState(false);
 
   const GEO_OPTS_FAST = {
     enableHighAccuracy: true,
@@ -56,46 +55,50 @@ export default function ExploreClient() {
     timeout: 30000,
   };
 
-  function clearWatch() {
+  const clearWatch = () => {
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
-  }
+  };
 
-  function startWatch() {
+  const startWatch = () => {
     clearWatch();
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
         setUserPos([pos.coords.latitude, pos.coords.longitude]);
+        setLocationInitialized(true);
         watchRetryRef.current.tries = 0;
       },
       (err) => {
         console.warn("watchPosition error:", err);
+        setLocationInitialized(true);
         if (err.code === 3) {
           clearWatch();
           const tries = ++watchRetryRef.current.tries;
           const delay = Math.min(5000, 1000 * Math.pow(1.5, tries));
-          watchRetryRef.current.id = setTimeout(() => startWatch(), delay);
+          watchRetryRef.current.id = setTimeout(startWatch, delay);
         } else if (err.code === 1) {
           setLocationModalOpen(true);
         } else {
           clearWatch();
-          setTimeout(() => startWatch(), 3000);
+          setTimeout(startWatch, 3000);
         }
       },
       GEO_OPTS_WATCH
     );
-  }
+  };
 
   const startGeolocation = () => {
     if (typeof window === "undefined") return;
     if (!("geolocation" in navigator)) {
       alert("Din webbläsare stöder inte plats.");
+      setLocationInitialized(true);
       return;
     }
     if (!window.isSecureContext) {
       alert("Plats kräver säker anslutning (https eller localhost).");
+      setLocationInitialized(true);
       return;
     }
 
@@ -103,10 +106,12 @@ export default function ExploreClient() {
       (pos) => {
         setUserPos([pos.coords.latitude, pos.coords.longitude]);
         setLocationModalOpen(false);
+        setLocationInitialized(true);
         startWatch();
       },
       (err) => {
         console.warn("getCurrentPosition error:", err);
+        setLocationInitialized(true);
         if (err.code === 1) setLocationModalOpen(true);
         startWatch();
       },
@@ -135,10 +140,11 @@ export default function ExploreClient() {
 
   useEffect(() => {
     setHydrated(true);
-
     const allowed = localStorage.getItem("locationAllowed") === "true";
     if (allowed) {
       startGeolocation();
+    } else {
+      setLocationInitialized(true);
     }
 
     return () => {
@@ -150,41 +156,15 @@ export default function ExploreClient() {
     };
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    if (!hydrated) return;
-    (async () => {
-      try {
-        if (!("permissions" in navigator)) {
-          if (!cancelled) setLocationModalOpen(true);
-          return;
-        }
-        const status = await navigator.permissions.query({
-          name: "geolocation",
-        });
-        if (cancelled) return;
-        if (status && status.state === "granted") {
-          startGeolocation();
-          setLocationModalOpen(false);
-        } else {
-          setLocationModalOpen(true);
-        }
-      } catch (_) {
-        if (!cancelled) setLocationModalOpen(true);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [hydrated]);
-
   const within = userPos
     ? isWithinRadius(userPos, target.center, target.radius)
     : false;
 
+  const unlockContent = () => setContentState("unlocked");
+
   const markStepDone = async () => {
     if (!within || !sessionId) return;
-    setTaskOpen(false);
+    setContentState("locked");
     await updateStep(nextStep);
   };
 
@@ -206,58 +186,73 @@ export default function ExploreClient() {
         />
       </div>
 
-      <div className="fixed bottom-4 left-0 right-0 z-[1100] flex justify-center pointer-events-none">
-        <div className="pointer-events-auto">
-          <Button
-            onClick={() => setTaskOpen(true)}
-            variant="primary"
-            disabled={!within}
-          >
-            Unlock
-          </Button>
-        </div>
-      </div>
-
-      {hydrated && (
-        <>
-          <Modal
-            open={locationModalOpen}
-            onClose={() => setLocationModalOpen(false)}
-          >
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Vi behöver din plats</h2>
-              <p className="text-sm text-gray-700">
-                För att låsa upp spelet behöver vi veta din position.
-              </p>
-              <div className="flex justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setLocationModalOpen(false)}
-                >
-                  Stäng
-                </Button>
-                <Button variant="primary" onClick={askLocation}>
-                  Tillåt plats
-                </Button>
+      {/* Unlock Button - only visible when locked and within radius */}
+      {hydrated &&
+        locationInitialized &&
+        contentState === "locked" &&
+        within && (
+          <div className="fixed inset-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[1100] pointer-events-auto">
+            <button
+              onClick={unlockContent}
+              className="w-60 h-20 px-10 py-6 bg-zinc-300 inline-flex justify-center items-center gap-2.5 hover:bg-zinc-400 transition-colors"
+            >
+              <div className="justify-start text-gray-800 text-xl font-semibold font-['Inter']">
+                Unlock the location
               </div>
-            </div>
-          </Modal>
+            </button>
+          </div>
+        )}
 
-          <Modal open={taskOpen} onClose={() => setTaskOpen(false)}>
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Task at {target.name}</h2>
-              <p className="text-sm text-gray-700">Task här!</p>
-              <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setTaskOpen(false)}>
-                  Stäng
-                </Button>
+      {/* Always-visible modal at the bottom */}
+      {hydrated && locationInitialized && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 pointer-events-auto z-[1000] ">
+          {contentState === "locked" ? (
+            within ? (
+              <div className="w-96 h-56 relative rounded-md shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] bg-gradient-to-b from-orange-50 to-orange-100 p-4">
+                <div className="text-Dark-blue text-sm font-medium mb-2">
+                  You have arrived
+                </div>
+                <div className="text-Dark-blue text-sm font-normal">
+                  Unlock the location
+                </div>
+              </div>
+            ) : (
+              <div className="w-96 h-56 relative opacity-95 rounded-md shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] bg-gradient-to-b from-orange-50 to-orange-100 p-4">
+                <div className="text-Dark-blue text-sm font-medium mb-2">
+                  Walk to the marked location
+                </div>
+                <div className="text-Dark-blue text-sm font-normal">
+                  Follow the path to reach your first location.
+                </div>
+                <div className="mt-4 flex justify-between items-center">
+                  <div className="text-Dark-blue text-sm font-medium">
+                    Distance remaining
+                  </div>
+                  <div className="text-amber-600 text-lg font-bold">115m</div>
+                </div>
+                <div className="mt-2 flex justify-between items-center">
+                  <div className="text-Dark-blue text-sm font-normal">
+                    Estimated time 2 minutes
+                  </div>
+                </div>
+              </div>
+            )
+          ) : (
+            <div className="w-96 h-auto relative opacity-95 rounded-2xl shadow-xl bg-white p-6">
+              <h2 className="text-lg font-semibold mb-2">
+                Task at {target.name}
+              </h2>
+              <p className="text-sm text-gray-700 mb-4">
+                Here is the content of your task. Mark it as done when finished.
+              </p>
+              <div className="flex justify-end">
                 <Button onClick={markStepDone} disabled={!within}>
                   Mark as done
                 </Button>
               </div>
             </div>
-          </Modal>
-        </>
+          )}
+        </div>
       )}
     </section>
   );
