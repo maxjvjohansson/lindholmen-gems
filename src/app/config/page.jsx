@@ -8,7 +8,9 @@ import Button from "@/components/Button/Button";
 
 import MinusIcon from "@/assets/icons/minus.svg";
 import PlusIcon from "@/assets/icons/plus.svg";
+import BackIcon from "@/assets/icons/back_icon.svg";
 import Header from "@/components/Header/Header";
+import Image from "next/image";
 
 function Row({ label, sub, value, onInc, onDec }) {
   return (
@@ -67,7 +69,9 @@ export default function ConfigPage() {
         stops,
       });
       await joinByCode(session.code, getOrCreateDeviceId(), "Leader");
-      router.push(`/start?session=${session.id}&code=${session.code}`);
+      router.push(
+        `/start?session=${session.id}&code=${session.code}&players=${players}&stops=${stops}`
+      );
     } catch (e) {
       console.error(e);
       setErr("Could not create session. Please try again.");
@@ -77,17 +81,30 @@ export default function ConfigPage() {
   }
 
   return (
-    <section className="min-h-[88vh] h-screen flex flex-col items-center bg-gradient-to-b from-[#FAF3EB]/50 to-[#FFE3CA]">
+    <section className="relative min-h-[88vh] h-screen flex flex-col items-center bg-gradient-to-b from-[#FAF3EB]/50 to-[#FFE3CA]">
+      <button
+        onClick={() => router.back()}
+        aria-label="Back"
+        className="absolute top-4 left-4 grid h-9 w-9 place-items-center rounded-full border-0 text-slate-700 hover:bg-slate-50"
+      >
+        <BackIcon />
+      </button>
+
       <Header />
+
       <div className="mx-auto w-full max-w-sm px-12">
+        <div className="text-center justify-start text-gray-800 text-2xl font-normal font-['Quicksand'] leading-loose">
+          Set up your perfect walk
+        </div>
+
+        <Image
+          src="/progress_bar.svg"
+          alt="Image of a progress bar"
+          width={300}
+          height={300}
+        />
+
         <form className="grid gap-6">
-          <Row
-            label="Duration"
-            sub="Perfect Duration"
-            value={`${duration} min`}
-            onInc={() => setDuration((v) => clamp(v + 5, 15, 60))}
-            onDec={() => setDuration((v) => clamp(v - 5, 15, 60))}
-          />
           <Row
             label="Players"
             sub="Players"

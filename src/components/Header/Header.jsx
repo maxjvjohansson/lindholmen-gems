@@ -3,7 +3,7 @@ import Image from "next/image";
 export default function Header() {
   return (
     <section>
-      <header className="flex flex-col items-center mb-16">
+      <header className="flex flex-col items-center mb-8">
         <div className="flex items-center justify-center mt-8">
           <Image
             src="/logo.svg"

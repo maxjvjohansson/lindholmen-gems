@@ -1,37 +1,32 @@
 "use client";
-import { useEffect, useMemo } from "react";
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProgressBar from "@/components/ProgressBar/ProgressBar";
 import { useParticipants } from "@/lib/useParticipants";
+import { useSessionProgress } from "@/lib/useSessionProgress";
 
-export default function ProgressOverlay({
-  total = 4,
-  storageKey = "progressStep",
-}) {
+export default function ProgressOverlay({ total = 4 }) {
+  return (
+    <Suspense fallback={null}>
+      <OverlayContent total={total} />
+    </Suspense>
+  );
+}
+
+function OverlayContent({ total }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-
   const sessionId = searchParams.get("session");
+
   if (!sessionId) {
     router.replace("/");
     return null;
   }
 
-  const { count, participants } = useParticipants(sessionId);
+  const { count } = useParticipants(sessionId);
+  const { step, loading } = useSessionProgress(sessionId);
 
-  const stepFromUrl = Number(searchParams.get("step"));
-  const stored =
-    typeof window !== "undefined"
-      ? Number(localStorage.getItem(storageKey))
-      : NaN;
-
-  const step = useMemo(() => stepFromUrl || stored || 1, [stepFromUrl, stored]);
-
-  useEffect(() => {
-    if (!isNaN(stepFromUrl)) {
-      localStorage.setItem(storageKey, String(stepFromUrl));
-    }
-  }, [stepFromUrl]);
+  if (loading) return null;
 
   const percent = Math.min(100, Math.max(0, (step / total) * 100));
 

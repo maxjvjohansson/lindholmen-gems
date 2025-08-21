@@ -9,7 +9,7 @@ export default function Hero() {
     <section className="px-12">
       <Header />
 
-      <div className="flex flex-col gap-8 w-full max-w-sm mb-10">
+      <div className="flex flex-col gap-8 w-full max-w-sm mx-auto mb-10">
         <Button href="/config" variant="primary" size="lg">
           Start a new walk
         </Button>
