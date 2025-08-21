@@ -128,11 +128,19 @@ export default function ExploreClient() {
         }
       }
     } catch (_) {}
+
+    localStorage.setItem("locationAllowed", "true");
     startGeolocation();
   };
 
   useEffect(() => {
     setHydrated(true);
+
+    const allowed = localStorage.getItem("locationAllowed") === "true";
+    if (allowed) {
+      startGeolocation();
+    }
+
     return () => {
       clearWatch();
       if (watchRetryRef.current.id) {
