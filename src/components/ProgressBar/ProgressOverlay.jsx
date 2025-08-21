@@ -58,7 +58,7 @@ function OverlayContent({ total }) {
   return (
     <div className="fixed top-0 left-0 right-0 z-10 p-4 bg-orange-50 pointer-events-none">
       <div className="max-w-2xl mx-auto pointer-events-auto">
-        <ProgressBar value={percent} label={`${step}/${total}`} />
+        <ProgressBar key={step} value={percent} label={`${step}/${total}`} />
       </div>
       <div className="absolute top-3 right-3 z-10 flex flex-row items-center gap-3">
         <span className="text-sm flex items-center gap-1">
