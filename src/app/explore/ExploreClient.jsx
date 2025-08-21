@@ -2,19 +2,34 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Button from "@/components/Button/Button";
-import { isWithinRadius } from "@/lib/geo";
 import { useSessionProgress } from "@/lib/useSessionProgress";
-
-const Modal = dynamic(() => import("@/components/Modal/Modal"), { ssr: false });
+import DistanceIcon from "@/assets/icons/distance.svg";
+import { CONTENTS } from "@/lib/taskContents";
+import QuestionIcon from "@/assets/icons/question_filled.svg";
+import PuzzleIcon from "@/assets/icons/puzzle.svg";
+import WalkingIcon from "@/assets/icons/walking_man.svg";
 
 const Map = dynamic(() => import("@/components/Map/Map"), {
   ssr: false,
   loading: () => <div className="w-full h-full bg-gray-100 rounded-md" />,
 });
 
+function haversineDistance([lat1, lon1], [lat2, lon2]) {
+  const toRad = (x) => (x * Math.PI) / 180;
+  const R = 6371e3;
+  const φ1 = toRad(lat1),
+    φ2 = toRad(lat2);
+  const Δφ = toRad(lat2 - lat1),
+    Δλ = toRad(lon2 - lon1);
+  const a =
+    Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 export default function ExploreClient() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session");
 
@@ -26,34 +41,31 @@ export default function ExploreClient() {
       { name: "Lärdomsgatan", center: [57.706028, 11.936274], radius: 30 },
       {
         name: "Lindholmen Science Park",
-        center: [57.7069, 11.9369],
+        center: [57.706028, 11.936274],
         radius: 30,
       },
-      { name: "Campus", center: [57.7075, 11.938], radius: 30 },
-      { name: "Kajen", center: [57.7078, 11.9345], radius: 30 },
+      { name: "Campus", center: [57.706028, 11.936274], radius: 30 },
+      { name: "Kajen", center: [57.706028, 11.936274], radius: 30 },
     ],
     []
   );
 
-  const target = targets[(currentStep ?? 1) - 1] || targets[0];
+  const idx = Math.max(0, Math.min((currentStep ?? 1) - 1, targets.length - 1));
+  const target = targets[idx];
+  const copy = CONTENTS[idx] || CONTENTS[0];
   const nextStep = Math.min(totalSteps, (currentStep ?? 1) + 1);
 
   const [userPos, setUserPos] = useState(null);
-  const [locationModalOpen, setLocationModalOpen] = useState(false);
-  const [taskOpen, setTaskOpen] = useState(false);
-  const watchIdRef = useRef(null);
-  const watchRetryRef = useRef({ tries: 0, id: null });
   const [hydrated, setHydrated] = useState(false);
+  const [unlocked, setUnlocked] = useState(false);
+  const [congratsShown, setCongratsShown] = useState(false);
 
-  const GEO_OPTS_FAST = {
+  const watchIdRef = useRef(null);
+
+  const GEO_OPTS = {
     enableHighAccuracy: true,
-    maximumAge: 15000,
-    timeout: 15000,
-  };
-  const GEO_OPTS_WATCH = {
-    enableHighAccuracy: true,
-    maximumAge: 30000,
-    timeout: 30000,
+    maximumAge: 10000,
+    timeout: 10000,
   };
 
   function clearWatch() {
@@ -62,131 +74,66 @@ export default function ExploreClient() {
       watchIdRef.current = null;
     }
   }
-
   function startWatch() {
     clearWatch();
     watchIdRef.current = navigator.geolocation.watchPosition(
-      (pos) => {
-        setUserPos([pos.coords.latitude, pos.coords.longitude]);
-        watchRetryRef.current.tries = 0;
-      },
-      (err) => {
-        console.warn("watchPosition error:", err);
-        if (err.code === 3) {
-          clearWatch();
-          const tries = ++watchRetryRef.current.tries;
-          const delay = Math.min(5000, 1000 * Math.pow(1.5, tries));
-          watchRetryRef.current.id = setTimeout(() => startWatch(), delay);
-        } else if (err.code === 1) {
-          setLocationModalOpen(true);
-        } else {
-          clearWatch();
-          setTimeout(() => startWatch(), 3000);
-        }
-      },
-      GEO_OPTS_WATCH
+      (pos) => setUserPos([pos.coords.latitude, pos.coords.longitude]),
+      (err) => console.warn("watchPosition error:", err),
+      GEO_OPTS
     );
   }
-
-  const startGeolocation = () => {
-    if (typeof window === "undefined") return;
-    if (!("geolocation" in navigator)) {
-      alert("Din webbläsare stöder inte plats.");
-      return;
-    }
-    if (!window.isSecureContext) {
-      alert("Plats kräver säker anslutning (https eller localhost).");
-      return;
-    }
-
+  function startGeolocation() {
+    if (!("geolocation" in navigator)) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setUserPos([pos.coords.latitude, pos.coords.longitude]);
-        setLocationModalOpen(false);
         startWatch();
       },
-      (err) => {
-        console.warn("getCurrentPosition error:", err);
-        if (err.code === 1) setLocationModalOpen(true);
-        startWatch();
-      },
-      GEO_OPTS_FAST
+      () => startWatch(),
+      GEO_OPTS
     );
-  };
-
-  const askLocation = async () => {
-    try {
-      if ("permissions" in navigator) {
-        const status = await navigator.permissions.query({
-          name: "geolocation",
-        });
-        if (status && status.state === "denied") {
-          alert(
-            "Plats är blockerad i webbläsaren. Tillåt plats och försök igen."
-          );
-          return;
-        }
-      }
-    } catch (_) {}
-
-    localStorage.setItem("locationAllowed", "true");
-    startGeolocation();
-  };
+  }
 
   useEffect(() => {
     setHydrated(true);
-
-    const allowed = localStorage.getItem("locationAllowed") === "true";
-    if (allowed) {
-      startGeolocation();
-    }
-
-    return () => {
-      clearWatch();
-      if (watchRetryRef.current.id) {
-        clearTimeout(watchRetryRef.current.id);
-        watchRetryRef.current.id = null;
-      }
-    };
+    startGeolocation();
+    return () => clearWatch();
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    if (!hydrated) return;
-    (async () => {
-      try {
-        if (!("permissions" in navigator)) {
-          if (!cancelled) setLocationModalOpen(true);
-          return;
-        }
-        const status = await navigator.permissions.query({
-          name: "geolocation",
-        });
-        if (cancelled) return;
-        if (status && status.state === "granted") {
-          startGeolocation();
-          setLocationModalOpen(false);
-        } else {
-          setLocationModalOpen(true);
-        }
-      } catch (_) {
-        if (!cancelled) setLocationModalOpen(true);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [hydrated]);
+    setUnlocked(false);
+    setCongratsShown(false);
+  }, [idx]);
 
-  const within = userPos
-    ? isWithinRadius(userPos, target.center, target.radius)
-    : false;
+  const distance = userPos ? haversineDistance(userPos, target.center) : null;
+  const within = distance !== null ? distance <= target.radius : false;
 
-  const markStepDone = async () => {
+  const markStepDone = () => {
     if (!within || !sessionId) return;
-    setTaskOpen(false);
-    await updateStep(nextStep);
+    setUnlocked(false);
+    setCongratsShown(true);
   };
+
+  const goNextLocation = async () => {
+    await updateStep(nextStep);
+    setCongratsShown(false);
+  };
+
+  const returnToLobby = () => {
+    router.push("/");
+  };
+
+  const TaskIcon = copy.task?.Icon || QuestionIcon;
+  const CongratsIcon = copy.congrats?.Icon || PuzzleIcon;
+
+  const FINAL_STATS = {
+    players: 5,
+    km: 1.5,
+    min: 30,
+    pieces: totalSteps,
+  };
+
+  const isFinalStep = idx === totalSteps - 1;
 
   return (
     <section className="w-full p-0">
@@ -203,62 +150,118 @@ export default function ExploreClient() {
           markerPosition={target.center}
           circleRadiusMeters={target.radius}
           markerPopup={target.name}
+          userPosition={userPos || undefined}
         />
+
+        {within && !unlocked && !congratsShown && (
+          <div className="absolute bottom-48 inset-0 flex items-center justify-center z-[1200]">
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={() => setUnlocked(true)}
+            >
+              {copy.overlay?.text || "Unlock the location"}
+            </Button>
+          </div>
+        )}
       </div>
 
-      <div className="fixed bottom-4 left-0 right-0 z-[1100] flex justify-center pointer-events-none">
-        <div className="pointer-events-auto">
-          <Button
-            onClick={() => setTaskOpen(true)}
-            variant="primary"
-            disabled={!within}
-          >
-            Unlock
-          </Button>
+      <div className="fixed bottom-32 left-0 right-0 z-[1100] flex justify-center">
+        <div className="w-[92%] max-w-xl rounded-2xl shadow-xl px-6 py-6 bg-gradient-to-b from-white to-orange-100">
+          {congratsShown ? (
+            isFinalStep ? (
+              <div className="text-center">
+                <h2 className="text-orange-400 text-2xl font-medium leading-loose">
+                  Well done!
+                </h2>
+                <p className="text-lg text-gray-800 mb-6">
+                  You completed the Lindholmen Walk!
+                </p>
+
+                <div className="flex justify-center gap-8 text-orange-400 text-2xl mb-6">
+                  <span>{FINAL_STATS.players} players</span>
+                  <span>{FINAL_STATS.km} km</span>
+                  <span>{FINAL_STATS.min}min</span>
+                </div>
+
+                <div className="flex items-center justify-center gap-3 text-orange-400 font-medium mb-6">
+                  <PuzzleIcon />
+                  <span>{FINAL_STATS.pieces} collected puzzle pieces</span>
+                </div>
+
+                <div className="flex justify-center">
+                  <Button onClick={returnToLobby}>Return to lobby</Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex items-center justify-center">
+                    <CongratsIcon />
+                  </div>
+                  <h2 className="text-xl font-bold">
+                    {copy.congrats?.title || "Congratulations!"}
+                  </h2>
+                </div>
+                <p className="text-[15px] leading-6 text-gray-800 text-center px-1 mb-4">
+                  {copy.congrats?.body}
+                </p>
+                <div className="flex justify-end">
+                  <Button onClick={goNextLocation}>
+                    {copy.congrats?.nextLabel || "Next location"}
+                  </Button>
+                </div>
+              </>
+            )
+          ) : unlocked ? (
+            <>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center justify-center">
+                  <TaskIcon />
+                </div>
+                <h2 className="text-lg font-semibold">
+                  {copy.task?.title || `Task at ${target.name}`}
+                </h2>
+              </div>
+              <p className="text-[15px] leading-6 text-gray-800 mb-5">
+                {copy.task?.body}
+              </p>
+              <div className="flex justify-end">
+                <Button
+                  onClick={markStepDone}
+                  disabled={!within}
+                  className="px-6"
+                >
+                  {copy.task?.doneLabel || "Done"}
+                </Button>
+              </div>
+            </>
+          ) : userPos ? (
+            <>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center justify-center">
+                  <WalkingIcon />
+                </div>
+                <h2 className="text-md font-semibold mb-1">
+                  {copy.pre?.title || `Walk to ${target.name}`}
+                </h2>
+              </div>
+              <p className="text-sm mb-4">{copy.pre?.body}</p>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium flex items-center gap-2">
+                  <DistanceIcon />
+                  {copy.pre?.distanceLabel || "Distance remaining"}
+                </span>
+                <span className="text-amber-600 font-bold">
+                  {distance !== null ? `${Math.round(distance)}m` : "--"}
+                </span>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-gray-500">Waiting for location...</p>
+          )}
         </div>
       </div>
-
-      {hydrated && (
-        <>
-          <Modal
-            open={locationModalOpen}
-            onClose={() => setLocationModalOpen(false)}
-          >
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Vi behöver din plats</h2>
-              <p className="text-sm text-gray-700">
-                För att låsa upp spelet behöver vi veta din position.
-              </p>
-              <div className="flex justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setLocationModalOpen(false)}
-                >
-                  Stäng
-                </Button>
-                <Button variant="primary" onClick={askLocation}>
-                  Tillåt plats
-                </Button>
-              </div>
-            </div>
-          </Modal>
-
-          <Modal open={taskOpen} onClose={() => setTaskOpen(false)}>
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Task at {target.name}</h2>
-              <p className="text-sm text-gray-700">Task här!</p>
-              <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setTaskOpen(false)}>
-                  Stäng
-                </Button>
-                <Button onClick={markStepDone} disabled={!within}>
-                  Mark as done
-                </Button>
-              </div>
-            </div>
-          </Modal>
-        </>
-      )}
     </section>
   );
 }
