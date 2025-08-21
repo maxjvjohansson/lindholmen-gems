@@ -14,7 +14,9 @@ export function useParticipants(sessionId) {
         .from("participants")
         .select("*")
         .eq("session_id", sessionId);
-      if (!cancelled && !error) setParticipants(data || []);
+      if (!cancelled && !error) {
+        setParticipants(data || []);
+      }
     }
     load();
 
@@ -30,11 +32,11 @@ export function useParticipants(sessionId) {
         },
         () => load()
       )
-      .subscribe();
+      .subscribe((status) => {});
 
     return () => {
       cancelled = true;
-      supabase.removeChannel(channel);
+      channel.unsubscribe();
     };
   }, [sessionId]);
 
