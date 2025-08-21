@@ -21,10 +21,10 @@ function StartPageContent() {
   const sessionId = sp.get("session");
   const code = sp.get("code") || "----";
 
+  const players = Number(sp.get("players")) || 1;
+  const stops = Number(sp.get("stops")) || 4;
   const [durationMin] = useState(30);
-  const [stops] = useState(4);
-  const [distanceKm] = useState(1.7);
-  const [teamWalk] = useState(1);
+  const [distanceKm] = useState(1.5);
   const [spin, setSpin] = useState(false);
 
   const shareUrl = useMemo(() => {
@@ -70,10 +70,10 @@ function StartPageContent() {
           You have chosen
         </div>
         <div className="grid grid-cols-2 gap-6 text-center">
-          <Stat top={teamWalk} label="Team walk" />
-          <Stat top={`${durationMin} min`} label="Perfect Duration" />
+          <Stat top={players} label="Players" />
+          <Stat top={`${durationMin} min`} label="Walking time" />
           <Stat top={stops} label="Stops" />
-          <Stat top={`${distanceKm}km`} label="Perfect Duration" />
+          <Stat top={`${distanceKm}km`} label="Total distance" />
         </div>
 
         <div className="aspect-square bg-[url('/map_preview.png')] bg-cover bg-center" />

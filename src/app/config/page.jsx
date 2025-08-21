@@ -68,7 +68,9 @@ export default function ConfigPage() {
         stops,
       });
       await joinByCode(session.code, getOrCreateDeviceId(), "Leader");
-      router.push(`/start?session=${session.id}&code=${session.code}`);
+      router.push(
+        `/start?session=${session.id}&code=${session.code}&players=${players}&stops=${stops}`
+      );
     } catch (e) {
       console.error(e);
       setErr("Could not create session. Please try again.");
