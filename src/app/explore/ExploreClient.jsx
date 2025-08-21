@@ -38,14 +38,14 @@ export default function ExploreClient() {
 
   const targets = useMemo(
     () => [
-      { name: "Lärdomsgatan", center: [57.706028, 11.936274], radius: 30 },
+      { name: "Karlatornet", center: [57.709547, 11.939558], radius: 50 },
       {
-        name: "Lindholmen Science Park",
-        center: [57.706028, 11.936274],
-        radius: 30,
+        name: "Kuggen",
+        center: [57.706874, 11.938779],
+        radius: 40,
       },
-      { name: "Campus", center: [57.706028, 11.936274], radius: 30 },
-      { name: "Kajen", center: [57.706028, 11.936274], radius: 30 },
+      { name: "Lindholmspiren", center: [57.705586, 11.939925], radius: 40 },
+      { name: "Backa Teater", center: [57.70519, 11.935338], radius: 40 },
     ],
     []
   );
