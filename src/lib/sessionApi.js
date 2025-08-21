@@ -1,6 +1,5 @@
 import { supabase } from "./supabaseClient";
 
-/** Skapa session med 4-siffrig kod + (valfritt) metadata */
 export async function createSession(opts = {}) {
   const {
     routeId = "lunch_30",
@@ -27,17 +26,15 @@ export async function createSession(opts = {}) {
     if (!error && data) return data;
 
     const msg = (error?.message || "").toLowerCase();
-    const pgcode = error?.code; // Postgres code (t.ex. 23505 = unique_violation)
+    const pgcode = error?.code;
     const isUnique =
       pgcode === "23505" || msg.includes("duplicate") || msg.includes("unique");
-    if (!isUnique) throw error; // nåt annat fel → avbryt och visa felet
-    // annars loopar vi och testar ny kod
+    if (!isUnique) throw error;
   }
 
   throw new Error("Failed to create a unique session code. Please try again.");
 }
 
-/** Gå med i session via 4-siffrig kod */
 export async function joinByCode(code, deviceId, displayName = "Guest") {
   const { data: sess, error: e1 } = await supabase
     .from("sessions")
@@ -47,26 +44,63 @@ export async function joinByCode(code, deviceId, displayName = "Guest") {
 
   if (e1 || !sess) throw new Error("Session not found");
 
-  const { error: e2 } = await supabase
-    .from("participants")
-    .insert({
-      session_id: sess.id,
-      device_id: deviceId,
-      display_name: displayName,
-    });
+  const { error: e2 } = await supabase.from("participants").insert({
+    session_id: sess.id,
+    device_id: deviceId,
+    display_name: displayName,
+  });
 
-  // Ignorera om samma device redan finns i sessionen
   if (e2 && !/duplicate|unique/i.test(e2.message)) throw e2;
 
   return sess;
 }
 
-/** Hämta en session (om du vill läsa metadata på StartPage) */
 export async function getSession(sessionId) {
   const { data, error } = await supabase
     .from("sessions")
     .select("*")
     .eq("id", sessionId)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getSessionProgress(sessionId) {
+  const { data, error } = await supabase
+    .from("sessions")
+    .select("id, current_step")
+    .eq("id", sessionId)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function setSessionStep(sessionId, step) {
+  const { data, error } = await supabase
+    .from("sessions")
+    .update({ current_step: step })
+    .eq("id", sessionId)
+    .select("id, current_step")
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function advanceSessionStep(sessionId) {
+  const { data: s0, error: e0 } = await supabase
+    .from("sessions")
+    .select("current_step")
+    .eq("id", sessionId)
+    .single();
+  if (e0) throw e0;
+
+  const next = (s0?.current_step ?? 1) + 1;
+
+  const { data, error } = await supabase
+    .from("sessions")
+    .update({ current_step: next })
+    .eq("id", sessionId)
+    .select("id, current_step")
     .single();
   if (error) throw error;
   return data;

@@ -4,8 +4,10 @@ import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Button from "@/components/Button/Button";
-const Modal = dynamic(() => import("@/components/Modal/Modal"), { ssr: false });
 import { isWithinRadius } from "@/lib/geo";
+import { useSessionProgress } from "@/lib/useSessionProgress";
+
+const Modal = dynamic(() => import("@/components/Modal/Modal"), { ssr: false });
 
 const Map = dynamic(() => import("@/components/Map/Map"), {
   ssr: false,
@@ -14,17 +16,10 @@ const Map = dynamic(() => import("@/components/Map/Map"), {
 
 export default function ExploreClient() {
   const searchParams = useSearchParams();
+  const sessionId = searchParams.get("session");
 
-  const [stepState, setStepState] = useState(1);
-  useEffect(() => {
-    const sp = Number(searchParams.get("step")) || 1;
-    setStepState(sp);
-  }, [searchParams]);
-
-  const currentStep = stepState;
+  const { step: currentStep, updateStep } = useSessionProgress(sessionId);
   const totalSteps = 4;
-  const nextStep = Math.min(totalSteps, currentStep + 1);
-  const nextHref = `/explore?step=${nextStep}`;
 
   const targets = useMemo(
     () => [
@@ -40,33 +35,109 @@ export default function ExploreClient() {
     []
   );
 
-  const target = targets[currentStep - 1] || targets[0];
+  const target = targets[(currentStep ?? 1) - 1] || targets[0];
+  const nextStep = Math.min(totalSteps, (currentStep ?? 1) + 1);
 
   const [userPos, setUserPos] = useState(null);
   const [locationModalOpen, setLocationModalOpen] = useState(false);
   const [taskOpen, setTaskOpen] = useState(false);
-  const [completedSteps, setCompletedSteps] = useState([]);
   const watchIdRef = useRef(null);
+  const watchRetryRef = useRef({ tries: 0, id: null });
   const [hydrated, setHydrated] = useState(false);
+
+  const GEO_OPTS_FAST = {
+    enableHighAccuracy: true,
+    maximumAge: 15000,
+    timeout: 15000,
+  };
+  const GEO_OPTS_WATCH = {
+    enableHighAccuracy: true,
+    maximumAge: 30000,
+    timeout: 30000,
+  };
+
+  function clearWatch() {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+  }
+
+  function startWatch() {
+    clearWatch();
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        setUserPos([pos.coords.latitude, pos.coords.longitude]);
+        watchRetryRef.current.tries = 0;
+      },
+      (err) => {
+        console.warn("watchPosition error:", err);
+        if (err.code === 3) {
+          clearWatch();
+          const tries = ++watchRetryRef.current.tries;
+          const delay = Math.min(5000, 1000 * Math.pow(1.5, tries));
+          watchRetryRef.current.id = setTimeout(() => startWatch(), delay);
+        } else if (err.code === 1) {
+          setLocationModalOpen(true);
+        } else {
+          clearWatch();
+          setTimeout(() => startWatch(), 3000);
+        }
+      },
+      GEO_OPTS_WATCH
+    );
+  }
+
+  const startGeolocation = () => {
+    if (typeof window === "undefined") return;
+    if (!("geolocation" in navigator)) {
+      alert("Din webbläsare stöder inte plats.");
+      return;
+    }
+    if (!window.isSecureContext) {
+      alert("Plats kräver säker anslutning (https eller localhost).");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserPos([pos.coords.latitude, pos.coords.longitude]);
+        setLocationModalOpen(false);
+        startWatch();
+      },
+      (err) => {
+        console.warn("getCurrentPosition error:", err);
+        if (err.code === 1) setLocationModalOpen(true);
+        startWatch();
+      },
+      GEO_OPTS_FAST
+    );
+  };
+
+  const askLocation = async () => {
+    try {
+      if ("permissions" in navigator) {
+        const status = await navigator.permissions.query({
+          name: "geolocation",
+        });
+        if (status && status.state === "denied") {
+          alert(
+            "Plats är blockerad i webbläsaren. Tillåt plats och försök igen."
+          );
+          return;
+        }
+      }
+    } catch (_) {}
+    startGeolocation();
+  };
 
   useEffect(() => {
     setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("completedSteps");
-      if (stored) setCompletedSteps(JSON.parse(stored));
-    } catch (e) {
-      console.warn("Kunde inte läsa completedSteps från localStorage", e);
-    }
-  }, []);
-
-  useEffect(() => {
     return () => {
-      if (watchIdRef.current !== null) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
-        watchIdRef.current = null;
+      clearWatch();
+      if (watchRetryRef.current.id) {
+        clearTimeout(watchRetryRef.current.id);
+        watchRetryRef.current.id = null;
       }
     };
   }, []);
@@ -99,90 +170,15 @@ export default function ExploreClient() {
     };
   }, [hydrated]);
 
-  const taskDone = completedSteps.includes(currentStep);
-
-  const markStepDone = () => {
-    if (!within || taskDone) return;
-    const newCompleted = [...completedSteps, currentStep];
-    setCompletedSteps(newCompleted);
-    try {
-      localStorage.setItem("completedSteps", JSON.stringify(newCompleted));
-    } catch (e) {
-      console.warn("Kunde inte spara completedSteps", e);
-    }
-    setTaskOpen(false);
-    window.location.href = nextHref;
-  };
-
-  const startGeolocation = () => {
-    if (typeof window === "undefined") return;
-
-    if (!("geolocation" in navigator)) {
-      alert("Din webbläsare stöder inte plats.");
-      return;
-    }
-    if (!window.isSecureContext) {
-      alert("Plats kräver säker anslutning (https eller localhost).");
-      return;
-    }
-
-    const opts = {
-      enableHighAccuracy: true,
-      maximumAge: 5000,
-      timeout: 10000,
-    };
-
-    const onSuccess = (pos) => {
-      setUserPos([pos.coords.latitude, pos.coords.longitude]);
-      setLocationModalOpen(false);
-    };
-
-    const onError = (err) => {
-      if (err.code === 1) {
-        alert(
-          "Platsåtkomst nekades. Tillåt plats i webbläsarens inställningar."
-        );
-      } else if (err.code === 2) {
-        alert("Kunde inte hämta positionen. Kontrollera platstjänster/GPS.");
-      } else {
-        alert("Tidsgräns uppnådd. Försök igen.");
-      }
-      console.error("Geolocation error:", err);
-    };
-
-    navigator.geolocation.getCurrentPosition(onSuccess, onError, opts);
-
-    if (watchIdRef.current !== null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-      watchIdRef.current = null;
-    }
-    watchIdRef.current = navigator.geolocation.watchPosition(
-      (pos) => setUserPos([pos.coords.latitude, pos.coords.longitude]),
-      (err) => console.error("watchPosition error:", err),
-      opts
-    );
-  };
-
-  const askLocation = async () => {
-    try {
-      if ("permissions" in navigator) {
-        const status = await navigator.permissions.query({
-          name: "geolocation",
-        });
-        if (status && status.state === "denied") {
-          alert(
-            "Plats är blockerad i webbläsaren. Tillåt plats för denna webbplats och försök igen."
-          );
-          return;
-        }
-      }
-    } catch (_) {}
-    startGeolocation();
-  };
-
   const within = userPos
     ? isWithinRadius(userPos, target.center, target.radius)
     : false;
+
+  const markStepDone = async () => {
+    if (!within || !sessionId) return;
+    setTaskOpen(false);
+    await updateStep(nextStep);
+  };
 
   return (
     <section className="w-full p-0">
@@ -205,10 +201,9 @@ export default function ExploreClient() {
       <div className="fixed bottom-4 left-0 right-0 z-[1100] flex justify-center pointer-events-none">
         <div className="pointer-events-auto">
           <Button
-            href={taskDone ? nextHref : undefined}
-            onClick={!taskDone ? () => setTaskOpen(true) : undefined}
+            onClick={() => setTaskOpen(true)}
             variant="primary"
-            disabled={!within && !taskDone}
+            disabled={!within}
           >
             Unlock
           </Button>
@@ -248,7 +243,7 @@ export default function ExploreClient() {
                 <Button variant="outline" onClick={() => setTaskOpen(false)}>
                   Stäng
                 </Button>
-                <Button onClick={markStepDone} disabled={!within || taskDone}>
+                <Button onClick={markStepDone} disabled={!within}>
                   Mark as done
                 </Button>
               </div>
