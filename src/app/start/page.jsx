@@ -45,7 +45,7 @@ function StartPageContent() {
 
   return (
     <section className="min-h-[88vh] h-screen flex items-start bg-gradient-to-b from-[#FAF3EB]/50 to-[#FFE3CA]">
-      <div className="mx-auto w-full max-w-sm p-6 grid gap-5">
+      <div className="mx-auto w-full max-w-sm p-6 grid gap-3">
         <div className="flex items-center justify-between">
           <button
             onClick={() => router.back()}
@@ -56,10 +56,10 @@ function StartPageContent() {
           </button>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-500">Team code</span>
+            <span className="text-sm text-[#1F2937]">Team code</span>
             <button
               onClick={() => copy(code)}
-              className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-lg font-semibold tracking-widest"
+              className="w-20 h-7 bg-gradient-to-r from-[#FFA656] to-[#CF711C] rounded-2xl text-sm text-orange-50"
               title="Copy team code"
             >
               {code}
