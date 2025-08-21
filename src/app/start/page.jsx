@@ -3,7 +3,7 @@
 import { Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Button from "@/components/Button/Button";
-import RefreshIcon from "@mui/icons-material/Refresh";
+import RefreshIcon from "@/assets/icons/refresh.svg";
 import BackIcon from "@/assets/icons/back_icon.svg";
 
 export default function StartPage() {
@@ -78,10 +78,10 @@ function StartPageContent() {
 
         <div className="aspect-square bg-[url('/map_preview.png')] bg-cover bg-center" />
 
-        <div className="flex items-center justify-center gap-2 text-slate-700">
+        <div className="flex items-center justify-end gap-2 text-slate-700">
           <button
             onClick={regenerateRoute}
-            className="inline-flex items-center gap-2"
+            className="inline-flex items-center gap-3"
           >
             <span>Generate new route</span>
             <RefreshIcon
