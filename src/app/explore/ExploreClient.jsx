@@ -44,7 +44,7 @@ export default function ExploreClient() {
         center: [57.706874, 11.938779],
         radius: 40,
       },
-      { name: "Lindholmspiren", center: [57.705586, 11.939925], radius: 40 },
+      { name: "Lindholmspiren", center: [57.704547, 11.940977], radius: 40 },
       { name: "Backa Teater", center: [57.70519, 11.935338], radius: 40 },
     ],
     []
@@ -166,7 +166,7 @@ export default function ExploreClient() {
         )}
       </div>
 
-      <div className="fixed bottom-32 left-0 right-0 z-[1100] flex justify-center">
+      <div className="fixed bottom-8 left-0 right-0 z-[1100] flex justify-center">
         <div className="w-[92%] max-w-xl rounded-2xl shadow-xl px-6 py-6 bg-gradient-to-b from-white to-orange-100">
           {congratsShown ? (
             isFinalStep ? (

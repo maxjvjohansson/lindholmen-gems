@@ -75,8 +75,9 @@ function StartPageContent() {
           <Stat top={stops} label="Stops" />
           <Stat top={`${distanceKm}km`} label="Total distance" />
         </div>
-
-        <div className="aspect-square bg-[url('/map_preview.png')] bg-cover bg-center" />
+        <div className="flex flex-col items-center">
+          <div className="aspect-square w-[250px] h-[250px] bg-[url('/map_preview.png')] bg-cover bg-center" />
+        </div>
 
         <div className="flex items-center justify-end gap-2 text-slate-700">
           <button
