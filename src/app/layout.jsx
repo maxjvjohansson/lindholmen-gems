@@ -11,7 +11,7 @@ const quicksand = Quicksand({
 export const metadata = {
   title: "Lindholmen Gems",
   description:
-    "En interaktiv skattjakt och lunchpromenad på Lindholmen. Utforska området, lös utmaningar vid olika platser och upptäck nya sidor av stadsdelen på ett roligt och aktivt sätt.",
+    "A location based interactive walking game that transforms Lindholmen into an engaging adventure. Players walk between real locations, complete fun challenges, and collect puzzle pieces together.",
 };
 
 export default function RootLayout({ children }) {
