@@ -33,19 +33,21 @@ export default function ExploreClient() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session");
 
+  const players = Number(searchParams.get("players")) || 1;
+
   const { step: currentStep, updateStep } = useSessionProgress(sessionId);
   const totalSteps = 4;
 
   const targets = useMemo(
     () => [
-      { name: "Karlatornet", center: [57.709547, 11.939558], radius: 50 },
+      { name: "Karlatornet", center: [57.709155, 11.940615], radius: 60 },
       {
         name: "Kuggen",
-        center: [57.706874, 11.938779],
+        center: [57.706805, 11.938837],
         radius: 40,
       },
-      { name: "Lindholmspiren", center: [57.704547, 11.940977], radius: 40 },
-      { name: "Backa Teater", center: [57.70519, 11.935338], radius: 40 },
+      { name: "Lindholmspiren", center: [57.704546, 11.940976], radius: 40 },
+      { name: "Backa Teater", center: [57.70513, 11.935599], radius: 40 },
     ],
     []
   );
@@ -127,7 +129,7 @@ export default function ExploreClient() {
   const CongratsIcon = copy.congrats?.Icon || PuzzleIcon;
 
   const FINAL_STATS = {
-    players: 5,
+    players: players,
     km: 1.5,
     min: 30,
     pieces: totalSteps,

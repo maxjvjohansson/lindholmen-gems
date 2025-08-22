@@ -94,7 +94,7 @@ function StartPageContent() {
 
         <div className="mt-2">
           <Button
-            href={`/explore?session=${sessionId}`}
+            href={`/explore?session=${sessionId}&players=${players}`}
             variant="primary"
             size="lg"
             className="w-full"
