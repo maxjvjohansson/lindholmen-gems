@@ -19,7 +19,7 @@ function Row({ label, sub, value, onInc, onDec }) {
         type="button"
         aria-label={`Decrease ${label}`}
         onClick={onDec}
-        className="p-0 m-0 bg-transparent border-none"
+        className="p-0 m-0 bg-transparent cursor-pointer border-none"
       >
         <MinusIcon
           className="w-11 h-11 block pointer-events-none"
@@ -36,7 +36,7 @@ function Row({ label, sub, value, onInc, onDec }) {
         type="button"
         aria-label={`Increase ${label}`}
         onClick={onInc}
-        className="p-0 m-0 bg-transparent border-none"
+        className="p-0 m-0 bg-transparent cursor-pointer border-none"
       >
         <PlusIcon
           className="w-11 h-11 block pointer-events-none"
@@ -115,9 +115,10 @@ export default function ConfigPage() {
           <Row
             label="Stops"
             sub="Stops"
-            value={stops}
-            onInc={() => setStops((v) => clamp(v + 1, 3, 6))}
-            onDec={() => setStops((v) => clamp(v - 1, 3, 6))}
+            value={4}
+            onInc={() => {}}
+            onDec={() => {}}
+            disabled
           />
 
           {err && <p className="text-sm text-red-600">{err}</p>}
