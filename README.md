@@ -77,7 +77,7 @@ A location based interactive walking game that transforms Lindholmen into an eng
 1. **Clone the repository**
 
    ```bash
-   git clone (https://github.com/maxjvjohansson/lindholmen-gems)
+   git clone https://github.com/maxjvjohansson/lindholmen-gems
    cd lindholmen-gems
    ```
 
